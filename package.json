@@ -1,6 +1,6 @@
 {
   "name": "@logion/rest-api-core",
-  "version": "0.4.6",
+  "version": "0.4.7-1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/logion-network/logion-rest-api-core.git"
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
-    "@logion/node-api": "^0.28.3",
+    "@logion/node-api": "^0.28.4-1",
     "@tsconfig/node16": "^16.1.1",
     "@types/express": "^4.17.14",
     "@types/express-fileupload": "^1.4.1",
