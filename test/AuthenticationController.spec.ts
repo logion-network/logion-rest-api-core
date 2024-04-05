@@ -237,13 +237,13 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
     if(verifies) {
         const signatures: SessionSignature[] = [
             {
-                address: validAccountId(ALICE).address,
+                address: ALICE,
                 signature: "SIG_ALICE",
                 signedOn: requireDefined(DateTime.now().toISO()),
                 type: "POLKADOT",
             },
             {
-                address: validAccountId(BOB).address,
+                address: BOB,
                 signature: "SIG_BOB",
                 signedOn: requireDefined(DateTime.now().toISO()),
                 type: "POLKADOT",
@@ -256,13 +256,13 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
         const tokens: Token[] = [
             {
                 type: "Polkadot",
-                address: validAccountId(ALICE).address,
+                address: ALICE,
                 value: TOKEN_ALICE,
                 expiredOn: DateTime.now(),
             },
             {
                 type: "Polkadot",
-                address: validAccountId(BOB).address,
+                address: BOB,
                 value: TOKEN_BOB,
                 expiredOn: DateTime.now(),
             }
@@ -278,23 +278,23 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
     const sessionRepository = new Mock<SessionRepository>();
     if (sessionExists) {
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === validAccountId(ALICE).address && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.address === ALICE && accountId.type === "Polkadot"),
             SESSION_ID)
         )
             .returns(Promise.resolve(sessionAlice.object()))
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === validAccountId(BOB).address && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.address === BOB && accountId.type === "Polkadot"),
             SESSION_ID)
         )
             .returns(Promise.resolve(sessionAlice.object()))
     } else {
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === validAccountId(ALICE).address && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.address === ALICE && accountId.type === "Polkadot"),
             SESSION_ID)
         )
             .returns(Promise.resolve(null))
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === validAccountId(BOB).address && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.address === BOB && accountId.type === "Polkadot"),
             SESSION_ID)
         )
             .returns(Promise.resolve(null))
