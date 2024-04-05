@@ -564,9 +564,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@logion/authenticator@npm:^0.5.5":
-  version: 0.5.5
-  resolution: "@logion/authenticator@npm:0.5.5"
+"@logion/authenticator@npm:^0.5.6-1":
+  version: 0.5.6-1
+  resolution: "@logion/authenticator@npm:0.5.6-1"
   dependencies:
     "@ethersproject/transactions": ^5.7.0
     "@multiversx/sdk-core": ^12.19.1
@@ -578,13 +578,13 @@ __metadata:
     web3-utils: ^4.2.1
   peerDependencies:
     "@logion/node-api": 0.x
-  checksum: 13783c7d56a319eb7dba070f499c5eb9fc86d3db8c130412c98a2ed988196e59d9a1f86464c61fb68f86fa0108563c88e2f34c2c3dfcc251f6050e8ecfb5bf7d
+  checksum: 277d25608c976ac3e42710dc977f344739181d7ae271621a4c16bce5842ed13684a273a364b26df16a2b337f22a23628b9c773260bbac98a1077b14c83434298
   languageName: node
   linkType: hard
 
-"@logion/node-api@npm:^0.28.4-1":
-  version: 0.28.4-1
-  resolution: "@logion/node-api@npm:0.28.4-1"
+"@logion/node-api@npm:^0.29.0-1":
+  version: 0.29.0-1
+  resolution: "@logion/node-api@npm:0.29.0-1"
   dependencies:
     "@polkadot/api": ^10.12.2
     "@polkadot/util": ^12.6.2
@@ -592,7 +592,7 @@ __metadata:
     "@types/uuid": ^9.0.2
     fast-sha256: ^1.3.0
     uuid: ^9.0.0
-  checksum: c790f99a0f85bdd8aa3d7f40e2b37b6f4a228b5e0753ce3565a9674a681ad4409f6aa53b735bb220890543d0287b3ef2fcee02feb3e997ce44a27824b6d33512
+  checksum: 6cc936d1866fef7cf05029ef9ebf097c836c9754587b5e528269d737007aefff577419c2f24f474f4ae40f283b7d2308907596649ca40bb022afeb3cca26051c
   languageName: node
   linkType: hard
 
@@ -601,8 +601,8 @@ __metadata:
   resolution: "@logion/rest-api-core@workspace:."
   dependencies:
     "@istanbuljs/nyc-config-typescript": ^1.0.2
-    "@logion/authenticator": ^0.5.5
-    "@logion/node-api": ^0.28.4-1
+    "@logion/authenticator": ^0.5.6-1
+    "@logion/node-api": ^0.29.0-1
     "@tsconfig/node16": ^16.1.1
     "@types/express": ^4.17.14
     "@types/express-fileupload": ^1.4.1
