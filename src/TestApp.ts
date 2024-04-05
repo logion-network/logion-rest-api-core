@@ -17,9 +17,8 @@ import { AuthenticationService } from "./AuthenticationService.js";
 import { UnauthorizedException } from "dinoloop/modules/builtin/exceptions/exceptions.js";
 import { buildBaseExpress } from "./Express.js";
 
-export const ALICE = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-export const BOB = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
-export const CHARLY = "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y";
+export const ALICE = "vQx5kESPn8dWyX4KxMCKqUyCaWUwtui1isX6PVNcZh2Ghjitr";
+export const BOB = "vQvWaxNDdzuX5N3qSvGMtjdHcQdw1TAcPNgx4S1Utd3MTxYeN";
 
 export * from "./TestUtil.js";
 
