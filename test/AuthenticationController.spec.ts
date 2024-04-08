@@ -22,13 +22,13 @@ import {
     NewSessionParameters,
     AuthenticateRequestView,
     requireDefined,
-    PolkadotService,
 } from "../src/index.js";
 
 import {
     setupApp,
     ALICE,
-    BOB, validAccountId, mockLogionNodeApi,
+    BOB,
+    validAccountId,
 } from "../src/TestApp.js";
 import { ValidAccountId } from "@logion/node-api";
 
@@ -190,16 +190,6 @@ function mockDependenciesForSignIn(container: Container): void {
 
     sessionRepository.setup(instance => instance.save)
         .returns(() => Promise.resolve());
-
-    mockPolkadotService(container);
-}
-
-function mockPolkadotService(container: Container) {
-    const api = mockLogionNodeApi();
-    const polkadotService = new Mock<PolkadotService>()
-    polkadotService.setup(instance => instance.readyApi())
-        .returns(Promise.resolve(api));
-    container.bind(PolkadotService).toConstantValue(polkadotService.object());
 }
 
 function mockDependenciesForAuth(container: Container, verifies: boolean, sessionExists:boolean): void {
@@ -305,6 +295,4 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
 
     const sessionFactory = new Mock<SessionFactory>();
     container.bind(SessionFactory).toConstantValue(sessionFactory.object());
-
-    mockPolkadotService(container);
 }

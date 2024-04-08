@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { buildApiClass, LogionNodeApiClass } from '@logion/node-api';
+import { LogionNodeApiClass } from '@logion/node-api';
 
 @injectable()
 export class PolkadotService {
@@ -11,7 +11,7 @@ export class PolkadotService {
 
     async readyApi(): Promise<LogionNodeApiClass> {
         if (this._api === null) {
-            this._api = await buildApiClass(this.endpoints);
+            this._api = await LogionNodeApiClass.connect(this.endpoints);
         }
         return this._api;
     }

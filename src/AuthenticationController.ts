@@ -20,7 +20,6 @@ import { AuthenticateRequestView, AuthenticateResponseView, RefreshRequestView, 
 
 import { Log } from './Logging.js';
 import { ValidAccountId } from "@logion/node-api";
-import { PolkadotService } from "./PolkadotService.js";
 import { UnauthorizedException } from "dinoloop/modules/builtin/exceptions/exceptions.js";
 const { logger } = Log;
 
@@ -45,8 +44,7 @@ export class AuthenticationController extends ApiController {
     constructor(
         private sessionRepository: SessionRepository,
         private sessionFactory: SessionFactory,
-        private authenticationService: AuthenticationService,
-        private polkadotService: PolkadotService) {
+        private authenticationService: AuthenticationService) {
         super();
     }
 
@@ -71,7 +69,7 @@ export class AuthenticationController extends ApiController {
         const session = sessionManager.createNewSession(requireDefined(signInRequest.addresses));
         for(const address of session.addresses) {
             const sessionAggregate = this.sessionFactory.newSession({
-                account: await this.toAccount(address),
+                account: this.toAccount(address),
                 sessionId: session.id,
                 createdOn: session.createdOn,
             });
@@ -80,10 +78,9 @@ export class AuthenticationController extends ApiController {
         return Promise.resolve({ sessionId: session.id });
     }
 
-    private async toAccount(address: string): Promise<ValidAccountId> {
+    private toAccount(address: string): ValidAccountId {
         try {
-            const api = await this.polkadotService.readyApi();
-            return ValidAccountId.parseKey(api.polkadot, address);
+            return ValidAccountId.parseKey(address);
         } catch (error) {
             throw new UnauthorizedException({ error: "" + error });
         }
@@ -124,7 +121,7 @@ export class AuthenticationController extends ApiController {
         const signatures: SessionSignature[] = [];
         let createdOn: DateTime | undefined;
         for (const address in authenticateRequest.signatures) {
-            const account = await this.toAccount(address);
+            const account = this.toAccount(address);
             createdOn = await this.clearSession(account, sessionId);
 
             const signature = authenticateRequest.signatures[address];
