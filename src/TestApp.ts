@@ -16,9 +16,11 @@ import { Mock } from "moq.ts";
 import { AuthenticationService } from "./AuthenticationService.js";
 import { UnauthorizedException } from "dinoloop/modules/builtin/exceptions/exceptions.js";
 import { buildBaseExpress } from "./Express.js";
+import { AccountId, AnyAccountId } from "@logion/node-api";
 
 export const ALICE = "vQx5kESPn8dWyX4KxMCKqUyCaWUwtui1isX6PVNcZh2Ghjitr";
 export const BOB = "vQvWaxNDdzuX5N3qSvGMtjdHcQdw1TAcPNgx4S1Utd3MTxYeN";
+const ALICE_ACCOUNT = new AnyAccountId(ALICE, "Polkadot").toValidAccountId();
 
 export * from "./TestUtil.js";
 
@@ -68,8 +70,8 @@ export interface AuthenticationServiceMock {
     ensureAuthorizationBearer: () => void;
 }
 
-export function mockAuthenticationWithCondition(conditionFulfilled: boolean, address?: string): AuthenticationServiceMock {
-    const authenticatedUser = mockAuthenticatedUser(conditionFulfilled, address);
+export function mockAuthenticationWithCondition(conditionFulfilled: boolean, account?: AccountId): AuthenticationServiceMock {
+    const authenticatedUser = mockAuthenticatedUser(conditionFulfilled, account);
     const ensureAuthorizationBearerMock = () => {
         if (!conditionFulfilled) {
             throw new UnauthorizedException();
@@ -112,13 +114,16 @@ export function mockAuthenticationFailureWithInvalidSignature(): AuthenticationS
     }
 }
 
-export function mockAuthenticationForUserOrLegalOfficer(isLegalOfficer: boolean, address?: string) {
+export function mockAuthenticationForUserOrLegalOfficer(isLegalOfficer: boolean, account?: AccountId) {
     const authenticatedUser = new Mock<AuthenticatedUser>();
-    authenticatedUser.setup(instance => instance.address).returns(address || ALICE);
-    authenticatedUser.setup(instance => instance.type).returns("Polkadot");
-    authenticatedUser.setup(instance => instance.isPolkadot()).returns(true);
-    authenticatedUser.setup(instance => instance.is).returns(() => true);
-    authenticatedUser.setup(instance => instance.isOneOf).returns(() => true);
+    const validAccount = account ?
+        new AnyAccountId(account.address, account.type).toValidAccountId() :
+        ALICE_ACCOUNT;
+    authenticatedUser.setup(instance => instance.address).returns(validAccount.address);
+    authenticatedUser.setup(instance => instance.type).returns(validAccount.type);
+    authenticatedUser.setup(instance => instance.isPolkadot()).returns(validAccount.type === "Polkadot");
+    authenticatedUser.setup(instance => instance.is).returns(account => account !== undefined && account !== null && account.equals(validAccount));
+    authenticatedUser.setup(instance => instance.isOneOf).returns(accounts => accounts.some(account => account !== undefined && account !== null && account.equals(validAccount)));
     authenticatedUser.setup(instance => instance.require).returns((predicate) => {
         if(!predicate(authenticatedUser.object())) {
             throw new UnauthorizedException();
@@ -135,6 +140,7 @@ export function mockAuthenticationForUserOrLegalOfficer(isLegalOfficer: boolean,
             throw new UnauthorizedException();
         }
     })
+    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
     return mockAuthenticationWithAuthenticatedUser(authenticatedUser.object());
 }
 
@@ -151,11 +157,14 @@ function mockAuthenticationService(mock: AuthenticationServiceMock): Authenticat
     return authenticationService.object();
 }
 
-export function mockAuthenticatedUser(conditionFulfilled: boolean, address?: string): AuthenticatedUser {
+export function mockAuthenticatedUser(conditionFulfilled: boolean, account?: AccountId): AuthenticatedUser {
     const authenticatedUser = new Mock<AuthenticatedUser>();
-    authenticatedUser.setup(instance => instance.address).returns(address || ALICE);
-    authenticatedUser.setup(instance => instance.type).returns("Polkadot");
-    authenticatedUser.setup(instance => instance.isPolkadot()).returns(true);
+    const validAccount = account ?
+        new AnyAccountId(account.address, account.type).toValidAccountId() :
+        ALICE_ACCOUNT;
+    authenticatedUser.setup(instance => instance.address).returns(validAccount.address);
+    authenticatedUser.setup(instance => instance.type).returns(validAccount.type);
+    authenticatedUser.setup(instance => instance.isPolkadot()).returns(validAccount.type === "Polkadot");
     authenticatedUser.setup(instance => instance.is).returns(() => conditionFulfilled);
     authenticatedUser.setup(instance => instance.isOneOf).returns(() => conditionFulfilled);
     authenticatedUser.setup(instance => instance.require).returns((predicate) => {
@@ -168,22 +177,24 @@ export function mockAuthenticatedUser(conditionFulfilled: boolean, address?: str
     authenticatedUser.setup(instance => instance.isNodeOwner).returns(() => conditionFulfilled);
     authenticatedUser.setup(instance => instance.isLegalOfficer()).returnsAsync(conditionFulfilled);
     authenticatedUser.setup(instance => instance.requireLegalOfficerOnNode).returns(() => {
-        if (address === ALICE) {
+        if (account?.address === ALICE) {
             return Promise.resolve(authenticatedUser.object());
         } else {
             throw new UnauthorizedException();
         }
     });
+    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
     return authenticatedUser.object();
 }
 
-export function mockLegalOfficerOnNode(address: string): AuthenticatedUser {
+export function mockLegalOfficerOnNode(account: AccountId): AuthenticatedUser {
     const authenticatedUser = new Mock<AuthenticatedUser>();
-    authenticatedUser.setup(instance => instance.address).returns(address);
-    authenticatedUser.setup(instance => instance.type).returns("Polkadot");
-    authenticatedUser.setup(instance => instance.isPolkadot()).returns(true);
-    authenticatedUser.setup(instance => instance.is).returns((param) => param === address);
-    authenticatedUser.setup(instance => instance.isOneOf).returns(addresses => addresses.indexOf(address) >= 0);
+    const validAccount = new AnyAccountId(account.address, account.type).toValidAccountId();
+    authenticatedUser.setup(instance => instance.address).returns(validAccount.address);
+    authenticatedUser.setup(instance => instance.type).returns(validAccount.type);
+    authenticatedUser.setup(instance => instance.isPolkadot()).returns(validAccount.type === "Polkadot");
+    authenticatedUser.setup(instance => instance.is).returns(account => account !== undefined && account !== null && account.equals(validAccount));
+    authenticatedUser.setup(instance => instance.isOneOf).returns(accounts => accounts.some(account => account !== undefined && account !== null && account.equals(validAccount)));
     authenticatedUser.setup(instance => instance.require).returns((predicate) => {
         if (!predicate(authenticatedUser.object())) {
             throw new UnauthorizedException();
@@ -194,6 +205,7 @@ export function mockLegalOfficerOnNode(address: string): AuthenticatedUser {
     authenticatedUser.setup(instance => instance.isNodeOwner()).returns(true);
     authenticatedUser.setup(instance => instance.isLegalOfficer()).returnsAsync(true);
     authenticatedUser.setup(instance => instance.requireLegalOfficerOnNode()).returns(Promise.resolve(authenticatedUser.object()));
+    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
     return authenticatedUser.object();
 }
 

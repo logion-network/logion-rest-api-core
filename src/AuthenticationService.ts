@@ -3,6 +3,7 @@ import { injectable } from "inversify";
 import { Request } from "express";
 import { UnauthorizedException } from "dinoloop/modules/builtin/exceptions/exceptions.js";
 import { AuthenticationSystemFactory, unauthorized } from "./AuthenticationSystemFactory.js";
+import { ValidAccountId } from "@logion/node-api";
 
 @injectable()
 export class AuthenticationService {
@@ -17,7 +18,7 @@ export class AuthenticationService {
         return authenticator.ensureAuthenticatedUserOrThrow(jwtToken);
     }
 
-    async authenticatedUserIs(request: Request, address: string | undefined | null): Promise<AuthenticatedUser> {
+    async authenticatedUserIs(request: Request, address: ValidAccountId | undefined | null): Promise<AuthenticatedUser> {
         const user = await this.authenticatedUser(request);
         user.require(user => user.is(address), "User has not access to this resource");
         return user;
@@ -28,7 +29,7 @@ export class AuthenticationService {
         return user.requireLegalOfficerOnNode();
     }
 
-    async authenticatedUserIsOneOf(request: Request, ...addresses: (string | undefined | null)[]): Promise<AuthenticatedUser> {
+    async authenticatedUserIsOneOf(request: Request, ...addresses: (ValidAccountId | undefined | null)[]): Promise<AuthenticatedUser> {
         const user = await this.authenticatedUser(request);
         user.require(user => user.isOneOf(addresses), "User has not access to this resource");
         return user;
