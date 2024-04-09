@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import fs from 'fs';
-import { QueryRunner, MigrationInterface, DataSource } from "typeorm";
+import { QueryRunner, DataSource } from "typeorm";
 
 import { overrideDataSource } from './DataSourceProvider.js';
 import { requireDefined } from './Assertions.js';
@@ -60,6 +60,13 @@ export function queryRunner(): QueryRunner {
     return requireDefined(dataSource).createQueryRunner();
 }
 
-export function allMigrations(): MigrationInterface[] {
-    return requireDefined(dataSource?.migrations);
+export async function runAllMigrations() {
+    await requireDefined(dataSource).runMigrations();
+}
+
+export async function revertAllMigrations() {
+    const definedDataSource = requireDefined(dataSource);
+    for(let i = 0; i < definedDataSource.migrations.length; ++i) {
+        await definedDataSource.undoLastMigration();
+    }
 }
