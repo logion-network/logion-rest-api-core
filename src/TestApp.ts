@@ -16,13 +16,10 @@ import { Mock } from "moq.ts";
 import { AuthenticationService } from "./AuthenticationService.js";
 import { UnauthorizedException } from "dinoloop/modules/builtin/exceptions/exceptions.js";
 import { buildBaseExpress } from "./Express.js";
-import { AccountId, AnyAccountId } from "@logion/node-api";
+import { AccountId, AnyAccountId, ValidAccountId } from "@logion/node-api";
 
-export const ALICE = "vQx5kESPn8dWyX4KxMCKqUyCaWUwtui1isX6PVNcZh2Ghjitr";
-export const BOB = "vQvWaxNDdzuX5N3qSvGMtjdHcQdw1TAcPNgx4S1Utd3MTxYeN";
-const ALICE_ACCOUNT = new AnyAccountId(ALICE, "Polkadot").toValidAccountId();
-
-export * from "./TestUtil.js";
+export const BOB = ValidAccountId.polkadot("vQvWaxNDdzuX5N3qSvGMtjdHcQdw1TAcPNgx4S1Utd3MTxYeN");
+export const ALICE = ValidAccountId.polkadot("vQx5kESPn8dWyX4KxMCKqUyCaWUwtui1isX6PVNcZh2Ghjitr");
 
 export function setupApp<T>(
     controller: Function & { prototype: T; }, // eslint-disable-line @typescript-eslint/ban-types
@@ -66,7 +63,7 @@ export interface AuthenticationServiceMock {
     authenticatedUser: () => Promise<AuthenticatedUser>;
     authenticatedUserIs: () => Promise<AuthenticatedUser>;
     authenticatedUserIsOneOf: () => Promise<AuthenticatedUser>;
-    nodeOwner: string;
+    nodeOwner: ValidAccountId;
     ensureAuthorizationBearer: () => void;
 }
 
@@ -118,7 +115,7 @@ export function mockAuthenticationForUserOrLegalOfficer(isLegalOfficer: boolean,
     const authenticatedUser = new Mock<AuthenticatedUser>();
     const validAccount = account ?
         new AnyAccountId(account.address, account.type).toValidAccountId() :
-        ALICE_ACCOUNT;
+        ALICE;
     authenticatedUser.setup(instance => instance.address).returns(validAccount.address);
     authenticatedUser.setup(instance => instance.type).returns(validAccount.type);
     authenticatedUser.setup(instance => instance.isPolkadot()).returns(validAccount.type === "Polkadot");
@@ -140,7 +137,7 @@ export function mockAuthenticationForUserOrLegalOfficer(isLegalOfficer: boolean,
             throw new UnauthorizedException();
         }
     })
-    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
+    authenticatedUser.setup(instance => instance.validAccountId).returns(validAccount)
     return mockAuthenticationWithAuthenticatedUser(authenticatedUser.object());
 }
 
@@ -161,7 +158,7 @@ export function mockAuthenticatedUser(conditionFulfilled: boolean, account?: Acc
     const authenticatedUser = new Mock<AuthenticatedUser>();
     const validAccount = account ?
         new AnyAccountId(account.address, account.type).toValidAccountId() :
-        ALICE_ACCOUNT;
+        ALICE;
     authenticatedUser.setup(instance => instance.address).returns(validAccount.address);
     authenticatedUser.setup(instance => instance.type).returns(validAccount.type);
     authenticatedUser.setup(instance => instance.isPolkadot()).returns(validAccount.type === "Polkadot");
@@ -177,13 +174,13 @@ export function mockAuthenticatedUser(conditionFulfilled: boolean, account?: Acc
     authenticatedUser.setup(instance => instance.isNodeOwner).returns(() => conditionFulfilled);
     authenticatedUser.setup(instance => instance.isLegalOfficer()).returnsAsync(conditionFulfilled);
     authenticatedUser.setup(instance => instance.requireLegalOfficerOnNode).returns(() => {
-        if (account?.address === ALICE) {
+        if (ALICE.equals(account)) {
             return Promise.resolve(authenticatedUser.object());
         } else {
             throw new UnauthorizedException();
         }
     });
-    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
+    authenticatedUser.setup(instance => instance.validAccountId).returns(validAccount)
     return authenticatedUser.object();
 }
 
@@ -205,7 +202,7 @@ export function mockLegalOfficerOnNode(account: AccountId): AuthenticatedUser {
     authenticatedUser.setup(instance => instance.isNodeOwner()).returns(true);
     authenticatedUser.setup(instance => instance.isLegalOfficer()).returnsAsync(true);
     authenticatedUser.setup(instance => instance.requireLegalOfficerOnNode()).returns(Promise.resolve(authenticatedUser.object()));
-    authenticatedUser.setup(instance => instance.toValidAccountId()).returns(validAccount)
+    authenticatedUser.setup(instance => instance.validAccountId).returns(validAccount)
     return authenticatedUser.object();
 }
 

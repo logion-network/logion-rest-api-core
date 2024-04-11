@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 import { v4 as uuid } from "uuid";
 
 import { SessionFactory, SessionAggregateRoot, NewSessionParameters } from "../src/index.js";
-import { ALICE, validAccountId } from "../src/TestApp.js";
+import { ALICE } from "../src/TestApp.js";
 
 describe("SessionFactory", () => {
 
@@ -10,7 +10,7 @@ describe("SessionFactory", () => {
         const sessionId = givenSessionId()
         const params: NewSessionParameters = {
             sessionId,
-            account: validAccountId(ALICE),
+            account: ALICE,
             createdOn: DateTime.now()
         }
         whenCreatingSession(params);

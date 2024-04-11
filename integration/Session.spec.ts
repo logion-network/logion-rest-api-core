@@ -2,10 +2,10 @@ import { DateTime } from "luxon";
 import { runOnTransactionCommit, runOnTransactionRollback } from "typeorm-transactional";
 import { connect, executeScript, disconnect, checkNumOfRows } from "../src/TestDb.js";
 import { DefaultTransactional, SessionAggregateRoot, SessionRepository } from "../src/index.js";
-import { validAccountId } from "../src/TestUtil.js";
+import { ValidAccountId } from "@logion/node-api";
 
-const userAddress = validAccountId('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY');
-const unknownAddress = validAccountId('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty');
+const userAddress = ValidAccountId.polkadot('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY');
+const unknownAddress = ValidAccountId.polkadot('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty');
 const existingSessionId = '0d9c1ca7-a2c5-48f7-b0fb-e66a977bc7b5';
 const anotherExistingSessionId = 'fc4bfdc6-9e79-4959-9dd5-fde5b38f1f88';
 const unknownSessionId = '5c03194a-1c07-4c7d-b9eb-3df722c15ae9';

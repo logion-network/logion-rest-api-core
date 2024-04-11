@@ -28,7 +28,6 @@ import {
     setupApp,
     ALICE,
     BOB,
-    validAccountId,
 } from "../src/TestApp.js";
 import { ValidAccountId } from "@logion/node-api";
 
@@ -45,8 +44,8 @@ describe("AuthenticationController", () => {
             .post('/api/auth/sign-in')
             .send({
                 addresses: [
-                    validAccountId(ALICE).toKey(),
-                    validAccountId(BOB).toKey(),
+                    ALICE.toKey(),
+                    BOB.toKey(),
                 ]
             })
             .expect(200)
@@ -61,12 +60,12 @@ describe("AuthenticationController", () => {
         const authenticateRequest: AuthenticateRequestView = {
             signatures: {}
         };
-        authenticateRequest.signatures![validAccountId(ALICE).toKey()] = {
+        authenticateRequest.signatures![ALICE.toKey()] = {
             signature: "signature-ALICE",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        authenticateRequest.signatures![validAccountId(BOB).toKey()] = {
+        authenticateRequest.signatures![BOB.toKey()] = {
             signature: "signature-BOB",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
@@ -79,8 +78,8 @@ describe("AuthenticationController", () => {
             .expect('Content-Type', /application\/json/)
             .then(response => {
                 expect(response.body.tokens).toBeDefined();
-                expect(response.body.tokens[validAccountId(ALICE).toKey()].value).toBe(TOKEN_ALICE);
-                expect(response.body.tokens[validAccountId(BOB).toKey()].value).toBe(TOKEN_BOB);
+                expect(response.body.tokens[ALICE.toKey()].value).toBe(TOKEN_ALICE);
+                expect(response.body.tokens[BOB.toKey()].value).toBe(TOKEN_BOB);
             });
     })
 
@@ -89,12 +88,12 @@ describe("AuthenticationController", () => {
         const authenticateRequest: AuthenticateRequestView = {
             signatures: {}
         };
-        authenticateRequest.signatures![validAccountId(ALICE).toKey()] = {
+        authenticateRequest.signatures![ALICE.toKey()] = {
             signature: "signature-ALICE",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        authenticateRequest.signatures![validAccountId(BOB).toKey()] = {
+        authenticateRequest.signatures![BOB.toKey()] = {
             signature: "signature-BOB",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
@@ -115,12 +114,12 @@ describe("AuthenticationController", () => {
         const authenticateRequest: AuthenticateRequestView = {
             signatures: {}
         };
-        authenticateRequest.signatures![validAccountId(ALICE).toKey()] = {
+        authenticateRequest.signatures![ALICE.toKey()] = {
             signature: "signature-ALICE",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        authenticateRequest.signatures![validAccountId(BOB).toKey()] = {
+        authenticateRequest.signatures![BOB.toKey()] = {
             signature: "signature-BOB",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
@@ -141,12 +140,12 @@ describe("AuthenticationController", () => {
         const authenticateRequest: AuthenticateRequestView = {
             signatures: {}
         };
-        authenticateRequest.signatures![`Unknown:${ ALICE }`] = {
+        authenticateRequest.signatures![`Unknown:${ ALICE.address }`] = {
             signature: "signature-ALICE",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        authenticateRequest.signatures![`Unknown:${ BOB }`] = {
+        authenticateRequest.signatures![`Unknown:${ BOB.address }`] = {
             signature: "signature-BOB",
             signedOn: TIMESTAMP,
             type: "POLKADOT",
@@ -173,18 +172,18 @@ function mockDependenciesForSignIn(container: Container): void {
     container.bind(SessionFactory).toConstantValue(sessionFactory.object());
 
     const aliceSession = new Mock<SessionAggregateRoot>();
-    aliceSession.setup(instance => instance.userAddress).returns(ALICE);
+    aliceSession.setup(instance => instance.userAddress).returns(ALICE.address);
 
     sessionFactory.setup(instance => instance.newSession(It.Is<NewSessionParameters>(
-        params => params.account.address === ALICE && params.account.type === "Polkadot"
+        params => params.account.equals(ALICE)
     )))
         .returns(aliceSession.object());
 
     const bobSession = new Mock<SessionAggregateRoot>();
-    bobSession.setup(instance => instance.userAddress).returns(BOB);
+    bobSession.setup(instance => instance.userAddress).returns(BOB.address);
 
     sessionFactory.setup(instance => instance.newSession(It.Is<NewSessionParameters>(
-        params => params.account.address === BOB && params.account.type === "Polkadot"
+        params => params.account.equals(BOB)
     )))
         .returns(bobSession.object());
 
@@ -222,18 +221,18 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
     });
 
     const session = new Mock<Session>();
-    session.setup(instance => instance.addresses).returns([ ALICE, BOB ]);
+    session.setup(instance => instance.addresses).returns([ ALICE.address, BOB.address ]);
 
     if(verifies) {
         const signatures: SessionSignature[] = [
             {
-                address: ALICE,
+                address: ALICE.address,
                 signature: "SIG_ALICE",
                 signedOn: requireDefined(DateTime.now().toISO()),
                 type: "POLKADOT",
             },
             {
-                address: BOB,
+                address: BOB.address,
                 signature: "SIG_BOB",
                 signedOn: requireDefined(DateTime.now().toISO()),
                 type: "POLKADOT",
@@ -246,13 +245,13 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
         const tokens: Token[] = [
             {
                 type: "Polkadot",
-                address: ALICE,
+                address: ALICE.address,
                 value: TOKEN_ALICE,
                 expiredOn: DateTime.now(),
             },
             {
                 type: "Polkadot",
-                address: BOB,
+                address: BOB.address,
                 value: TOKEN_BOB,
                 expiredOn: DateTime.now(),
             }
@@ -268,23 +267,23 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
     const sessionRepository = new Mock<SessionRepository>();
     if (sessionExists) {
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === ALICE && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.equals(ALICE)),
             SESSION_ID)
         )
             .returns(Promise.resolve(sessionAlice.object()))
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === BOB && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.equals(BOB)),
             SESSION_ID)
         )
             .returns(Promise.resolve(sessionAlice.object()))
     } else {
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === ALICE && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.equals(ALICE)),
             SESSION_ID)
         )
             .returns(Promise.resolve(null))
         sessionRepository.setup(instance => instance.find(
-            It.Is<ValidAccountId>(accountId => accountId.address === BOB && accountId.type === "Polkadot"),
+            It.Is<ValidAccountId>(accountId => accountId.equals(BOB)),
             SESSION_ID)
         )
             .returns(Promise.resolve(null))
