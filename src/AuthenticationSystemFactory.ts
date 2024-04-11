@@ -5,6 +5,7 @@ import { Duration } from "luxon";
 import PeerId from "peer-id";
 
 import { PolkadotService } from "./PolkadotService.js";
+import { ValidAccountId } from "@logion/node-api";
 
 export function unauthorized(error: string): UnauthorizedException<{ error: string }> {
     return new UnauthorizedException({ error });
@@ -45,7 +46,7 @@ export class AuthenticationSystemFactory {
         this.tokenConfig = {
             nodePeerId: PeerId.createFromB58String(process.env.JWT_ISSUER),
             nodeKey: Buffer.from(process.env.JWT_SECRET, "hex"),
-            nodeOwner: process.env.OWNER,
+            nodeOwner: ValidAccountId.polkadot(process.env.OWNER),
             jwtTimeToLive: Duration.fromObject({ seconds: Number(process.env.JWT_TTL_SEC) }),
         };
     }
@@ -54,7 +55,7 @@ export class AuthenticationSystemFactory {
 
     private _authenticationSystem: AuthenticationSystem | undefined;
 
-    get nodeOwner(): string {
+    get nodeOwner(): ValidAccountId {
         return this.tokenConfig.nodeOwner;
     }
 }

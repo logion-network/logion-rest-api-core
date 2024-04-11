@@ -65,7 +65,7 @@ export class AuthenticationService {
         }
     }
 
-    get nodeOwner(): string {
+    get nodeOwner(): ValidAccountId {
         return this.authenticationSystemFactory.nodeOwner;
     }
 }
