@@ -39,14 +39,11 @@ export class AuthenticationSystemFactory {
         if (process.env.JWT_TTL_SEC === undefined) {
             throw Error("No JWT Time-to-live set, please set var JWT_TTL_SEC");
         }
-        if (process.env.OWNER === undefined) {
-            throw Error("No node owner set, please set var OWNER");
-        }
 
         this.tokenConfig = {
             nodePeerId: PeerId.createFromB58String(process.env.JWT_ISSUER),
             nodeKey: Buffer.from(process.env.JWT_SECRET, "hex"),
-            nodeOwner: ValidAccountId.polkadot(process.env.OWNER),
+            nodeOwner: process.env.OWNER ? ValidAccountId.polkadot(process.env.OWNER) : undefined,
             jwtTimeToLive: Duration.fromObject({ seconds: Number(process.env.JWT_TTL_SEC) }),
         };
     }
@@ -55,7 +52,7 @@ export class AuthenticationSystemFactory {
 
     private _authenticationSystem: AuthenticationSystem | undefined;
 
-    get nodeOwner(): ValidAccountId {
+    get nodeOwner(): ValidAccountId | undefined {
         return this.tokenConfig.nodeOwner;
     }
 }
