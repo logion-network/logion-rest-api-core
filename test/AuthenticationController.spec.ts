@@ -36,7 +36,7 @@ const TOKEN_ALICE = "some-fake-token-for-ALICE";
 const TOKEN_BOB = "some-fake-token-for-BOB";
 const SESSION_ID = "a4dade1d-f12c-414c-93f7-7f20ce1e2cb8";
 
-describe("AuthenticationController", () => {
+describe("AuthenticationController (sign-in)", () => {
 
     it('should sign-in successfully', async () => {
         const app = setupApp(AuthenticationController, mockDependenciesForSignIn);
@@ -55,6 +55,12 @@ describe("AuthenticationController", () => {
             });
     });
 
+})
+
+describe("AuthenticationController (authentication)", () => {
+
+    const version = "V1";
+
     it('should authenticate successfully', async () => {
 
         const authenticateRequest: AuthenticateRequestView = {
@@ -70,7 +76,7 @@ describe("AuthenticationController", () => {
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container,true, true));
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, true, true, version));
         await request(app)
             .post(`/api/auth/${SESSION_ID}/authenticate`)
             .send(authenticateRequest)
@@ -98,7 +104,7 @@ describe("AuthenticationController", () => {
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container,false, true));
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, false, true, version));
         await request(app)
             .post(`/api/auth/${SESSION_ID}/authenticate`)
             .send(authenticateRequest)
@@ -124,7 +130,7 @@ describe("AuthenticationController", () => {
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container,true, false));
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, true, false, version));
         await request(app)
             .post(`/api/auth/${SESSION_ID}/authenticate`)
             .send(authenticateRequest)
@@ -150,9 +156,122 @@ describe("AuthenticationController", () => {
             signedOn: TIMESTAMP,
             type: "POLKADOT",
         };
-        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container,false, true));
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, false, true, version));
         await request(app)
             .post(`/api/auth/${SESSION_ID}/authenticate`)
+            .send(authenticateRequest)
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+            .then(response => {
+                expect(response.body.error).toBe("Error: Unsupported key format");
+            });
+    })
+
+
+});
+
+describe("AuthenticationController (authentication v2)", () => {
+
+    const version = "V2";
+
+    it('should authenticate successfully', async () => {
+
+        const authenticateRequest: AuthenticateRequestView = {
+            signatures: {}
+        };
+        authenticateRequest.signatures![ALICE.toKey()] = {
+            signature: "signature-ALICE",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        authenticateRequest.signatures![BOB.toKey()] = {
+            signature: "signature-BOB",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, true, true, version));
+        await request(app)
+            .post(`/api/auth/${SESSION_ID}/authenticate/v2`)
+            .send(authenticateRequest)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(response => {
+                expect(response.body.tokens).toBeDefined();
+                expect(response.body.tokens[ALICE.toKey()].value).toBe(TOKEN_ALICE);
+                expect(response.body.tokens[BOB.toKey()].value).toBe(TOKEN_BOB);
+            });
+    })
+
+    it('should fail to authenticate on wrong signature', async () => {
+
+        const authenticateRequest: AuthenticateRequestView = {
+            signatures: {}
+        };
+        authenticateRequest.signatures![ALICE.toKey()] = {
+            signature: "signature-ALICE",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        authenticateRequest.signatures![BOB.toKey()] = {
+            signature: "signature-BOB",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, false, true, version));
+        await request(app)
+            .post(`/api/auth/${SESSION_ID}/authenticate/v2`)
+            .send(authenticateRequest)
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+            .then(response => {
+                expect(response.body.error).toBe("Invalid signature");
+            });
+    })
+
+    it('should fail to authenticate on missing session', async () => {
+
+        const authenticateRequest: AuthenticateRequestView = {
+            signatures: {}
+        };
+        authenticateRequest.signatures![ALICE.toKey()] = {
+            signature: "signature-ALICE",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        authenticateRequest.signatures![BOB.toKey()] = {
+            signature: "signature-BOB",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, true, false, version));
+        await request(app)
+            .post(`/api/auth/${SESSION_ID}/authenticate/v2`)
+            .send(authenticateRequest)
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+            .then(response => {
+                expect(response.body.error).toBe("Invalid session");
+            });
+    })
+
+    it('should fail to authenticate on wrong address type', async () => {
+
+        const authenticateRequest: AuthenticateRequestView = {
+            signatures: {}
+        };
+        authenticateRequest.signatures![`Unknown:${ ALICE.address }`] = {
+            signature: "signature-ALICE",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        authenticateRequest.signatures![`Unknown:${ BOB.address }`] = {
+            signature: "signature-BOB",
+            signedOn: TIMESTAMP,
+            type: "POLKADOT",
+        };
+        const app = setupApp(AuthenticationController, (container) => mockDependenciesForAuth(container, false, true, version));
+        await request(app)
+            .post(`/api/auth/${SESSION_ID}/authenticate/v2`)
             .send(authenticateRequest)
             .expect(401)
             .expect('Content-Type', /application\/json/)
@@ -191,7 +310,7 @@ function mockDependenciesForSignIn(container: Container): void {
         .returns(() => Promise.resolve());
 }
 
-function mockDependenciesForAuth(container: Container, verifies: boolean, sessionExists:boolean): void {
+function mockDependenciesForAuth(container: Container, verifies: boolean, sessionExists:boolean, version: "V1" | "V2"): void {
 
     const sessionAlice = new Mock<SessionAggregateRoot>();
     sessionAlice.setup(instance => instance.createdOn).returns(DateTime.now().toJSDate());
@@ -238,10 +357,17 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
                 type: "POLKADOT",
             }
         ];
-        sessionManager.setup(instance => instance.signedSessionOrThrow(It.IsAny(), It.IsAny())).returnsAsync({
-            session: session.object(),
-            signatures
-        });
+        if (version === "V1") {
+            sessionManager.setup(instance => instance.signedSessionOrThrow(It.IsAny(), It.IsAny())).returnsAsync({
+                session: session.object(),
+                signatures
+            });
+        } else {
+            sessionManager.setup(instance => instance.signedSessionOrThrowV2(It.IsAny(), It.IsAny())).returnsAsync({
+                session: session.object(),
+                signatures
+            });
+        }
         const tokens: Token[] = [
             {
                 type: "Polkadot",
@@ -260,8 +386,17 @@ function mockDependenciesForAuth(container: Container, verifies: boolean, sessio
             args => args.session === session.object() && args.signatures === signatures
         ), It.IsAny())).returnsAsync(tokens);
     } else {
-        sessionManager.setup(instance => instance.signedSessionOrThrow)
-            .returns(() => { throw new UnauthorizedException({error: "Invalid signature"}) });
+        if (version === "V1") {
+            sessionManager.setup(instance => instance.signedSessionOrThrow)
+                .returns(() => {
+                    throw new UnauthorizedException({ error: "Invalid signature" })
+                });
+        } else {
+            sessionManager.setup(instance => instance.signedSessionOrThrowV2)
+                .returns(() => {
+                    throw new UnauthorizedException({ error: "Invalid signature" })
+                });
+        }
     }
 
     const sessionRepository = new Mock<SessionRepository>();

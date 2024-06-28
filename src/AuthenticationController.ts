@@ -33,6 +33,7 @@ export function fillInSpecForAuthenticationController(spec: OpenAPIV3.Document):
 
     AuthenticationController.signIn(spec);
     AuthenticationController.authenticate(spec);
+    AuthenticationController.authenticateV2(spec);
 }
 
 @injectable()
@@ -109,6 +110,34 @@ export class AuthenticationController extends ApiController {
         const { sessionManager, authenticator } = await this.authenticationService.authenticationSystem();
 
         const signedSession = await sessionManager.signedSessionOrThrow(session, signatures);
+        const tokens = await authenticator.createTokens(signedSession, DateTime.now());
+
+        return this.toAuthenticateResponseView(tokens);
+    }
+
+    static authenticateV2(spec: OpenAPIV3.Document) {
+        const operationObject = requireDefined(spec.paths["/api/auth/{sessionId}/authenticate/v2"].post);
+        operationObject.summary = "Authenticate the given session";
+        operationObject.description = "<p>The signature's resource is <code>authentication</code>, the operation <code>login</code> and the additional field is <code>sessionId</code><p>";
+        operationObject.requestBody = getRequestBody({
+            description: "Authentication data",
+            view: "AuthenticateRequestView",
+        });
+        operationObject.responses = getDefaultResponses("AuthenticateResponseView");
+        setPathParameters(operationObject, { 'sessionId': "The ID of the session to authenticate" });
+    }
+
+    @HttpPost('/:sessionId/authenticate/v2')
+    @Async()
+    async authenticateV2(
+        authenticateRequest: AuthenticateRequestView,
+        sessionId: string
+    ): Promise<AuthenticateResponseView> {
+
+        const { session, signatures } = await this.sessionAndSignatures(authenticateRequest, sessionId);
+        const { sessionManager, authenticator } = await this.authenticationService.authenticationSystem();
+
+        const signedSession = await sessionManager.signedSessionOrThrowV2(session, signatures);
         const tokens = await authenticator.createTokens(signedSession, DateTime.now());
 
         return this.toAuthenticateResponseView(tokens);
